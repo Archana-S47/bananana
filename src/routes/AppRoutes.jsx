@@ -1,27 +1,42 @@
 import { Route, Routes } from 'react-router-dom';
 import ProtectedRoute from '../components/ProtectedRoute.jsx';
 import MainLayout from '../layouts/MainLayout.jsx';
+import AdminAnalytics from '../pages/AdminAnalytics.jsx';
+import AdminComplaints from '../pages/AdminComplaints.jsx';
 import AdminDashboard from '../pages/AdminDashboard.jsx';
+import AdminUsers from '../pages/AdminUsers.jsx';
 import Home from '../pages/Home.jsx';
 import Login from '../pages/Login.jsx';
 import NotFound from '../pages/NotFound.jsx';
 import Register from '../pages/Register.jsx';
+import Settings from '../pages/Settings.jsx';
+import StudentComplaints from '../pages/StudentComplaints.jsx';
 import StudentDashboard from '../pages/StudentDashboard.jsx';
+import SubmitComplaint from '../pages/SubmitComplaint.jsx';
 
 function AppRoutes() {
   return (
     <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="login" element={<Login />} />
+      <Route path="register" element={<Register />} />
+
       <Route element={<MainLayout />}>
-        <Route index element={<Home />} />
-        <Route path="login" element={<Login />} />
-        <Route path="register" element={<Register />} />
+        <Route element={<ProtectedRoute allowedRoles={['student', 'admin']} />}>
+          <Route path="settings" element={<Settings />} />
+        </Route>
 
         <Route element={<ProtectedRoute allowedRoles={['student']} />}>
           <Route path="student/dashboard" element={<StudentDashboard />} />
+          <Route path="student/complaints" element={<StudentComplaints />} />
+          <Route path="student/submit" element={<SubmitComplaint />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
           <Route path="admin/dashboard" element={<AdminDashboard />} />
+          <Route path="admin/complaints" element={<AdminComplaints />} />
+          <Route path="admin/analytics" element={<AdminAnalytics />} />
+          <Route path="admin/users" element={<AdminUsers />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

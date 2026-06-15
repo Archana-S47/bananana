@@ -89,6 +89,9 @@ function Login() {
         </div>
 
         <form className="space-y-5" onSubmit={handleSubmit} noValidate>
+          <div className="rounded-md bg-blue-50 px-3 py-2 text-xs text-blue-800 mb-4">
+            Demo: student@campus.edu / password123 (Student) or admin@campus.edu / password123 (Admin)
+          </div>
           <Input
             error={errors.email}
             id="login-email"
