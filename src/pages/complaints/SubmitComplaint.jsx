@@ -1,18 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import api from '../../services/api.js';
 import ComplaintForm from '../../components/complaints/ComplaintForm';
 import StatusBadge from '../../components/ui/StatusBadge';
 
 const SubmitComplaint = () => {
   const [submissions, setSubmissions] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (data) => {
-    const newSubmission = {
-      ...data,
-      id: `CMP-${Math.floor(Math.random() * 10000)}`,
-      status: 'open',
-      submittedAt: new Date().toISOString(),
-    };
-    setSubmissions((prev) => [newSubmission, ...prev]);
+  useEffect(() => {
+    // Optionally fetch existing complaints to show history below form
+    fetchHistory();
+  }, []);
+
+  const fetchHistory = async () => {
+    try {
+      const { data } = await api.get('/complaints');
+      // Show only recent ones (first 3) for the submission page
+      setSubmissions(data.slice(0, 3));
+    } catch (err) {
+      console.error('Failed to fetch history', err);
+    }
+  };
+
+  const handleSubmit = async (formData) => {
+    try {
+      setLoading(true);
+      const { data } = await api.post('/complaints', formData);
+      setSubmissions((prev) => [data, ...prev]);
+      alert('Complaint submitted successfully and saved!');
+    } catch (err) {
+      alert('Failed to submit complaint.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -28,7 +49,7 @@ const SubmitComplaint = () => {
 
       {submissions.length > 0 && (
         <div className="space-y-4">
-          <h2 className="text-xl font-bold text-slate-950">Recent Submissions (Local State)</h2>
+          <h2 className="text-xl font-bold text-slate-950">Recent Submissions (Persisted)</h2>
           <div className="space-y-4">
             {submissions.map((sub) => (
               <div key={sub.id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm space-y-3">

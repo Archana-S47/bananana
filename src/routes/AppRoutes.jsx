@@ -13,6 +13,8 @@ import Settings from '../pages/Settings.jsx';
 import StudentComplaints from '../pages/complaints/StudentComplaints.jsx';
 import StudentDashboard from '../pages/StudentDashboard.jsx';
 import SubmitComplaint from '../pages/complaints/SubmitComplaint.jsx';
+import ComplaintDetails from '../pages/complaints/ComplaintDetails.jsx';
+import EditComplaint from '../pages/complaints/EditComplaint.jsx';
 
 function AppRoutes() {
   return (
@@ -29,6 +31,8 @@ function AppRoutes() {
         <Route element={<ProtectedRoute allowedRoles={['student']} />}>
           <Route path="student/dashboard" element={<StudentDashboard />} />
           <Route path="student/complaints" element={<StudentComplaints />} />
+          <Route path="student/complaints/:id" element={<ComplaintDetails />} />
+          <Route path="student/complaints/edit/:id" element={<EditComplaint />} />
           <Route path="student/submit" element={<SubmitComplaint />} />
         </Route>
 

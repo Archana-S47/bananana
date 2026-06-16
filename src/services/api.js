@@ -1,28 +1,26 @@
 const MOCK_USERS_KEY = 'ccms_mock_users';
+const MOCK_COMPLAINTS_KEY = 'ccms_mock_complaints';
 const MOCK_DELAY = 300;
 
-function getMockUsers() {
-  const stored = localStorage.getItem(MOCK_USERS_KEY);
+// Import initial dummy data for seeding if needed
+import { studentComplaints } from '../data/dummyData';
+
+function getMockComplaints() {
+  const stored = localStorage.getItem(MOCK_COMPLAINTS_KEY);
   if (stored) {
     return JSON.parse(stored);
   }
-  const defaultUsers = [
-    {
-      id: 'usr_1',
-      name: 'Demo Student',
-      email: 'student@campus.edu',
-      password: 'password123',
-      role: 'student',
-    },
-    {
-      id: 'usr_2',
-      name: 'Demo Admin',
-      email: 'admin@campus.edu',
-      password: 'password123',
-      role: 'admin',
-    },
-  ];
-  localStorage.setItem(MOCK_USERS_KEY, JSON.stringify(defaultUsers));
+  // Initialize with dummy data if none exists
+  localStorage.setItem(MOCK_COMPLAINTS_KEY, JSON.stringify(studentComplaints));
+  return studentComplaints;
+}
+
+function saveMockComplaints(complaints) {
+  localStorage.setItem(MOCK_COMPLAINTS_KEY, JSON.stringify(complaints));
+}
+
+function getMockUsers() {
+// ... existing getMockUsers ...
   return defaultUsers;
 }
 
@@ -69,6 +67,50 @@ async function mockPost(url, data) {
     return { data: { token: generateToken(), user: userWithoutPassword } };
   }
 
+  if (url === '/complaints') {
+    const complaints = getMockComplaints();
+    const newComplaint = {
+      ...data,
+      id: 'CMP-' + Math.floor(1000 + Math.random() * 9000),
+      status: 'pending',
+      submittedAt: new Date().toISOString(),
+    };
+    complaints.unshift(newComplaint);
+    saveMockComplaints(complaints);
+    return { data: newComplaint };
+  }
+
+  throw createError(404, 'Not found');
+}
+
+async function mockPut(url, data) {
+  await delay(MOCK_DELAY);
+  
+  if (url.startsWith('/complaints/')) {
+    const id = url.split('/').pop();
+    const complaints = getMockComplaints();
+    const index = complaints.findIndex(c => c.id === id);
+    if (index === -1) throw createError(404, 'Complaint not found');
+    
+    complaints[index] = { ...complaints[index], ...data };
+    saveMockComplaints(complaints);
+    return { data: complaints[index] };
+  }
+  
+  throw createError(404, 'Not found');
+}
+
+async function mockDelete(url) {
+  await delay(MOCK_DELAY);
+  
+  if (url.startsWith('/complaints/')) {
+    const id = url.split('/').pop();
+    const complaints = getMockComplaints();
+    const filtered = complaints.filter(c => c.id !== id);
+    saveMockComplaints(filtered);
+    return { data: { success: true } };
+  }
+  
   throw createError(404, 'Not found');
 }
 
@@ -80,8 +122,11 @@ function createError(status, message) {
 
 const mockApi = {
   post: mockPost,
+  put: mockPut,
+  delete: mockDelete,
   get: async (url) => {
     await delay(MOCK_DELAY);
+    
     if (url === '/auth/me') {
       const token = localStorage.getItem('ccms_token');
       if (!token) throw createError(401, 'Unauthorized');
@@ -89,6 +134,19 @@ const mockApi = {
       if (!userStr) throw createError(401, 'Unauthorized');
       return { data: { user: JSON.parse(userStr) } };
     }
+    
+    if (url === '/complaints') {
+      return { data: getMockComplaints() };
+    }
+    
+    if (url.startsWith('/complaints/')) {
+      const id = url.split('/').pop();
+      const complaints = getMockComplaints();
+      const complaint = complaints.find(c => c.id === id);
+      if (!complaint) throw createError(404, 'Complaint not found');
+      return { data: complaint };
+    }
+    
     throw createError(404, 'Not found');
   },
 };

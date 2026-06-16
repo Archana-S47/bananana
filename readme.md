@@ -242,7 +242,7 @@ When MongoDB is configured, replace the mock API:
 4. Commit with conventional messages: `feat:`, `fix:`, `chore:`
 5. Push and open PR
 
-## Known Issues / TODO
+## Known Issues /   TODO
 
 - [ ] Backend MongoDB connection needs IP whitelist or local MongoDB
 - [ ] Replace mock API with real backend endpoints

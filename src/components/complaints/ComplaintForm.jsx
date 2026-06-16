@@ -15,7 +15,7 @@ const CATEGORIES = [
   { label: 'Other', value: 'Other' },
 ];
 
-const ComplaintForm = ({ onSubmit, initialData = {} }) => {
+const ComplaintForm = ({ onSubmit, initialData = {}, submitButtonText = "Submit Complaint" }) => {
   const [formData, setFormData] = useState({
     title: initialData.title || '',
     category: initialData.category || '',
@@ -125,7 +125,7 @@ const ComplaintForm = ({ onSubmit, initialData = {} }) => {
           type="submit"
           className="rounded-lg bg-blue-700 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-800 shadow-sm transition-colors"
         >
-          Submit Complaint
+          {submitButtonText}
         </button>
       </div>
     </form>

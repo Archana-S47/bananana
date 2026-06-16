@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { studentComplaints } from '../../data/dummyData.js';
+import React, { useState, useMemo, useEffect } from 'react';
+import api from '../../services/api.js';
 import ComplaintCard from '../../components/complaints/ComplaintCard';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
@@ -14,6 +14,11 @@ const CATEGORIES = [
   { label: 'Electrical', value: 'Electrical' },
   { label: 'Water Supply', value: 'Water Supply' },
   { label: 'Cleanliness', value: 'Cleanliness' },
+  { label: 'IT Infrastructure', value: 'IT Infrastructure' },
+  { label: 'Facilities', value: 'Facilities' },
+  { label: 'Food Services', value: 'Food Services' },
+  { label: 'Safety', value: 'Safety' },
+  { label: 'Academic', value: 'Academic' },
   { label: 'Other', value: 'Other' },
 ];
 
@@ -25,28 +30,41 @@ const STATUSES = [
 ];
 
 const StudentComplaints = () => {
-  // Use local state for dummy data to allow interaction (delete)
-  const [complaints, setComplaints] = useState(studentComplaints);
+  const [complaints, setComplaints] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  // Features: View, Edit, Delete
-  const handleView = (complaint) => {
-    alert(`Viewing Details:\n\nID: ${complaint.id}\nTitle: ${complaint.title}\nDescription: ${complaint.description}`);
-  };
+  useEffect(() => {
+    fetchComplaints();
+  }, []);
 
-  const handleEdit = (complaint) => {
-    alert(`Edit Mode: Opening form for "${complaint.title}"`);
-  };
-
-  const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this pending complaint?')) {
-      setComplaints((prev) => prev.filter((c) => c.id !== id));
+  const fetchComplaints = async () => {
+    try {
+      setLoading(true);
+      const { data } = await api.get('/complaints');
+      setComplaints(data);
+    } catch (err) {
+      setError('Failed to load complaints.');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Logic: Search and Filter
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this pending complaint?')) {
+      try {
+        await api.delete(`/complaints/${id}`);
+        setComplaints((prev) => prev.filter((c) => c.id !== id));
+      } catch (err) {
+        alert('Failed to delete complaint.');
+      }
+    }
+  };
+
   const filteredComplaints = useMemo(() => {
     return complaints.filter((complaint) => {
       const matchesSearch = complaint.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -57,6 +75,19 @@ const StudentComplaints = () => {
       return matchesSearch && matchesCategory && matchesStatus;
     });
   }, [complaints, search, categoryFilter, statusFilter]);
+
+  if (loading) return (
+    <div className="flex items-center justify-center py-20">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700"></div>
+    </div>
+  );
+
+  if (error) return (
+    <div className="flex flex-col items-center justify-center py-20 text-red-600">
+      <p>{error}</p>
+      <button onClick={fetchComplaints} className="mt-4 text-blue-600 font-bold hover:underline">Try Again</button>
+    </div>
+  );
 
   return (
     <div className="mx-auto max-w-6xl space-y-8 pb-12 px-4">
@@ -114,8 +145,6 @@ const StudentComplaints = () => {
             <ComplaintCard 
               key={complaint.id} 
               complaint={complaint}
-              onView={handleView}
-              onEdit={handleEdit}
               onDelete={handleDelete}
             />
           ))}
