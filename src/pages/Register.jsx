@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Input from '../components/Input.jsx';
+import Input from '../components/ui/Input.jsx';
 import { useAuth } from '../context/useAuth.js';
 import api from '../services/api.js';
 

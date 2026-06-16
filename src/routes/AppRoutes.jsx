@@ -2,7 +2,7 @@ import { Route, Routes } from 'react-router-dom';
 import ProtectedRoute from '../components/ProtectedRoute.jsx';
 import MainLayout from '../layouts/MainLayout.jsx';
 import AdminAnalytics from '../pages/AdminAnalytics.jsx';
-import AdminComplaints from '../pages/AdminComplaints.jsx';
+import AdminComplaints from '../pages/complaints/AdminComplaints.jsx';
 import AdminDashboard from '../pages/AdminDashboard.jsx';
 import AdminUsers from '../pages/AdminUsers.jsx';
 import Home from '../pages/Home.jsx';
@@ -10,9 +10,9 @@ import Login from '../pages/Login.jsx';
 import NotFound from '../pages/NotFound.jsx';
 import Register from '../pages/Register.jsx';
 import Settings from '../pages/Settings.jsx';
-import StudentComplaints from '../pages/StudentComplaints.jsx';
+import StudentComplaints from '../pages/complaints/StudentComplaints.jsx';
 import StudentDashboard from '../pages/StudentDashboard.jsx';
-import SubmitComplaint from '../pages/SubmitComplaint.jsx';
+import SubmitComplaint from '../pages/complaints/SubmitComplaint.jsx';
 
 function AppRoutes() {
   return (

@@ -1,0 +1,146 @@
+import React, { useState, useMemo } from 'react';
+import { studentComplaints } from '../../data/dummyData.js';
+import ComplaintCard from '../../components/complaints/ComplaintCard';
+import Input from '../../components/ui/Input';
+import Select from '../../components/ui/Select';
+
+const CATEGORIES = [
+  { label: 'All Categories', value: 'all' },
+  { label: 'Classroom', value: 'Classroom' },
+  { label: 'Laboratory', value: 'Laboratory' },
+  { label: 'Hostel', value: 'Hostel' },
+  { label: 'Library', value: 'Library' },
+  { label: 'Internet/Wi-Fi', value: 'Internet/Wi-Fi' },
+  { label: 'Electrical', value: 'Electrical' },
+  { label: 'Water Supply', value: 'Water Supply' },
+  { label: 'Cleanliness', value: 'Cleanliness' },
+  { label: 'Other', value: 'Other' },
+];
+
+const STATUSES = [
+  { label: 'All Status', value: 'all' },
+  { label: 'Pending', value: 'pending' },
+  { label: 'In Progress', value: 'in_progress' },
+  { label: 'Resolved', value: 'resolved' },
+];
+
+const StudentComplaints = () => {
+  // Use local state for dummy data to allow interaction (delete)
+  const [complaints, setComplaints] = useState(studentComplaints);
+  const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  // Features: View, Edit, Delete
+  const handleView = (complaint) => {
+    alert(`Viewing Details:\n\nID: ${complaint.id}\nTitle: ${complaint.title}\nDescription: ${complaint.description}`);
+  };
+
+  const handleEdit = (complaint) => {
+    alert(`Edit Mode: Opening form for "${complaint.title}"`);
+  };
+
+  const handleDelete = (id) => {
+    if (window.confirm('Are you sure you want to delete this pending complaint?')) {
+      setComplaints((prev) => prev.filter((c) => c.id !== id));
+    }
+  };
+
+  // Logic: Search and Filter
+  const filteredComplaints = useMemo(() => {
+    return complaints.filter((complaint) => {
+      const matchesSearch = complaint.title.toLowerCase().includes(search.toLowerCase()) ||
+                           complaint.id.toLowerCase().includes(search.toLowerCase());
+      const matchesCategory = categoryFilter === 'all' || complaint.category === categoryFilter;
+      const matchesStatus = statusFilter === 'all' || complaint.status === statusFilter;
+
+      return matchesSearch && matchesCategory && matchesStatus;
+    });
+  }, [complaints, search, categoryFilter, statusFilter]);
+
+  return (
+    <div className="mx-auto max-w-6xl space-y-8 pb-12 px-4">
+      {/* Header section */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 border-b border-slate-100 pb-8">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-extrabold text-slate-950 tracking-tight">My Complaints</h1>
+          <p className="text-slate-500 text-lg">Manage and track your submitted campus issues.</p>
+        </div>
+        <a
+          href="/student/submit"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-700 px-6 py-3 text-sm font-bold text-white hover:bg-blue-800 transition-all shadow-md active:scale-95"
+        >
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+          </svg>
+          New Complaint
+        </a>
+      </div>
+
+      {/* Filter Toolbar */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-400 uppercase ml-1">Search</label>
+            <Input
+              placeholder="Search by title or ID..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-400 uppercase ml-1">Category</label>
+            <Select
+              options={CATEGORIES}
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-400 uppercase ml-1">Status</label>
+            <Select
+              options={STATUSES}
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Complaints Display */}
+      {filteredComplaints.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filteredComplaints.map((complaint) => (
+            <ComplaintCard 
+              key={complaint.id} 
+              complaint={complaint}
+              onView={handleView}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-24 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+          <div className="rounded-2xl bg-white p-5 shadow-sm mb-5">
+            <svg className="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold text-slate-900">No complaints found</h3>
+          <p className="text-slate-500 mt-2 text-center max-w-sm px-6">
+            We couldn't find any complaints matching your current filters. Try resetting them or search for something else.
+          </p>
+          <button 
+            onClick={() => { setSearch(''); setCategoryFilter('all'); setStatusFilter('all'); }}
+            className="mt-6 font-bold text-blue-600 hover:text-blue-800 transition-colors"
+          >
+            Clear all filters
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default StudentComplaints;

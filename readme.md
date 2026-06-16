@@ -13,9 +13,16 @@ A full-stack MERN application for managing campus complaints with role-based das
 
 ```
 src/
-├── components/          # Reusable UI components
+├── components/          
+│   ├── ui/              # Base Reusable UI Components
+│   │   ├── Input.jsx    # Styled text input with error support
+│   │   ├── Select.jsx   # Customizable dropdown component
+│   │   ├── TextArea.jsx # Multi-line text area component
+│   │   └── StatusBadge.jsx # Context-aware status indicator
+│   ├── complaints/      # Complaint-specific components
+│   │   ├── ComplaintForm.jsx # Unified form for submission/edit
+│   │   └── ComplaintCard.jsx # Grid card for complaint listings
 │   ├── Icons.jsx        # SVG icon components
-│   ├── Input.jsx        # Form input wrapper
 │   ├── Navbar.jsx       # Top navigation bar
 │   ├── ProtectedRoute.jsx # Route guard for auth/roles
 │   ├── Sidebar.jsx      # Collapsible side navigation
@@ -29,25 +36,37 @@ src/
 ├── layouts/
 │   └── MainLayout.jsx   # App shell with sidebar + navbar
 ├── pages/               # Route components
-│   ├── AdminAnalytics.jsx    # Charts: category/priority/status trends
-│   ├── AdminComplaints.jsx   # Admin complaint management table
-│   ├── AdminDashboard.jsx    # Admin overview (4 stat cards + actions)
-│   ├── AdminUsers.jsx        # User management table
-│   ├── Home.jsx              # Landing page
-│   ├── Login.jsx             # Login form
-│   ├── Register.jsx          # Registration with role selection
-│   ├── Settings.jsx          # Profile/Notifications/Preferences tabs
-│   ├── StudentComplaints.jsx # Student complaint list table
-│   ├── StudentDashboard.jsx  # Student overview (3 stat cards)
-│   └── SubmitComplaint.jsx   # Complaint submission form
+│   ├── complaints/      # Complaint module pages
+│   │   ├── AdminComplaints.jsx   # Admin management view
+│   │   ├── StudentComplaints.jsx # Student "My Complaints" view
+│   │   └── SubmitComplaint.jsx  # New complaint submission page
+│   ├── AdminAnalytics.jsx    
+│   ├── AdminDashboard.jsx    
+│   ├── AdminUsers.jsx        
+│   ├── Home.jsx              
+│   ├── Login.jsx             
+│   ├── Register.jsx          
+│   ├── Settings.jsx          
+│   ├── StudentDashboard.jsx  
+│   └── NotFound.jsx
 ├── routes/
 │   └── AppRoutes.jsx     # Route definitions with protection
 ├── services/
-│   └── api.js           # Mock API (localStorage) - replace with real API
+│   └── api.js           # Mock API (localStorage)
 ├── styles.css           # Global styles + Tailwind imports
 ├── App.jsx              # Root component
 └── main.jsx             # Entry point
 ```
+
+## Recent Progress (June 2026)
+
+- **Modular UI Reorganization**: Established a `src/components/ui` pattern for foundational components (Input, Select, TextArea, StatusBadge) to ensure design consistency.
+- **Enhanced Complaint Module**: 
+  - Integrated a new `ComplaintForm` that strictly follows the 9-category schema (Classroom, Laboratory, etc.).
+  - Implemented a searchable and filterable "My Complaints" page for students.
+  - Added **Conditional Actions**: Students can now Edit or Delete complaints, but only while they are in **Pending** status.
+  - Refined **Status Visuals**: Standardized colors (Pending: Yellow/Amber, In Progress: Blue, Resolved: Green/Emerald).
+  - Implemented **ComplaintCard** for modular display across lists and grids.
 
 ## Getting Started
 
@@ -109,23 +128,26 @@ You can also register new accounts via `/register`.
 
 ## Features Implemented
 
-### Student Dashboard
-- **Stat Cards**: Total Complaints, Pending, Resolved
-- **Recent Complaints List** with status badges
-- **My Complaints** page: Full table with filtering
-- **Submit Complaint** form with validation
+### Student Dashboard & Management
+- **Stat Cards**: Total Complaints, Pending, Resolved overview.
+- **My Complaints Page**:
+  - **Grid-based Layout**: Uses modular `ComplaintCard` for better visibility.
+  - **Search**: Real-time filtering by Title or ID.
+  - **Advanced Filters**: Dropdowns for Category and Status.
+  - **Management**: Conditional **Edit** and **Delete** actions for Pending complaints.
+- **Submit Complaint**: Form validation using reusable `Input`, `Select`, and `TextArea` components.
 
 ### Admin Dashboard
-- **Stat Cards**: Total, Pending, In Progress, Resolved
-- **Quick Actions**: Manage Complaints, Analytics, Users, Settings
-- **All Complaints** table with inline status editing
-- **Analytics**: Category bars, priority distribution, status cards, monthly trend
-- **User Management**: Table with role/status badges
+- **Stat Cards**: Total, Pending, In Progress, Resolved tracking.
+- **Quick Actions**: Manage Complaints, Analytics, Users, Settings.
+- **All Complaints Table**: Status management and overview.
+- **Analytics**: Visualization of category distribution, priority, and trends.
+- **User Management**: Comprehensive view of campus users and roles.
 
-### Shared
-- **Settings**: Profile, Notification preferences, Display preferences
-- **Responsive Sidebar** with role-based navigation
-- **Mobile-friendly** with collapsible menu
+### Shared UI & Architecture
+- **Reusable UI Library**: Foundational components in `src/components/ui`.
+- **Responsive Sidebar**: Role-based navigation that adapts to mobile devices.
+- **Mobile-friendly**: Fully responsive design using Tailwind CSS.
 
 ## Switching to Real Backend
 
