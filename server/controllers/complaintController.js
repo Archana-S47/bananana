@@ -57,6 +57,83 @@ function formatComplaint(complaint) {
   };
 }
 
+function escapeRegex(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function parseAdminDateFilter(dateValue) {
+  if (!dateValue) {
+    return null;
+  }
+
+  const parsedDate = new Date(dateValue);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return { error: 'Invalid date filter' };
+  }
+
+  return {
+    createdDate: {
+      $gte: new Date(
+        Date.UTC(
+          parsedDate.getUTCFullYear(),
+          parsedDate.getUTCMonth(),
+          parsedDate.getUTCDate(),
+          0,
+          0,
+          0,
+          0,
+        ),
+      ),
+      $lte: new Date(
+        Date.UTC(
+          parsedDate.getUTCFullYear(),
+          parsedDate.getUTCMonth(),
+          parsedDate.getUTCDate(),
+          23,
+          59,
+          59,
+          999,
+        ),
+      ),
+    },
+  };
+}
+
+function buildAdminComplaintFilter(query = {}) {
+  const filter = {};
+
+  if (query.category) {
+    filter.category = new RegExp(`^${escapeRegex(query.category.trim())}$`, 'i');
+  }
+
+  if (query.status) {
+    const normalizedStatus = String(query.status).trim().toLowerCase();
+    const allowedStatuses = ['pending', 'open', 'in_progress', 'resolved', 'rejected'];
+
+    if (!allowedStatuses.includes(normalizedStatus)) {
+      return { error: 'Invalid complaint status filter' };
+    }
+
+    filter.status =
+      normalizedStatus === 'pending'
+        ? { $in: ['pending', 'open'] }
+        : normalizedStatus;
+  }
+
+  const dateFilter = parseAdminDateFilter(query.date);
+
+  if (dateFilter?.error) {
+    return { error: dateFilter.error };
+  }
+
+  if (dateFilter) {
+    Object.assign(filter, dateFilter);
+  }
+
+  return filter;
+}
+
 async function findComplaintById(id) {
   if (!mongoose.isValidObjectId(id)) {
     return null;
@@ -125,6 +202,30 @@ export async function getComplaints(req, res) {
   } catch (error) {
     return res.status(500).json({
       message: 'Failed to fetch complaints',
+      error: error.message,
+    });
+  }
+}
+
+export async function getAdminComplaints(req, res) {
+  try {
+    const filter = buildAdminComplaintFilter(req.query);
+
+    if (filter.error) {
+      return res.status(400).json({ message: filter.error });
+    }
+
+    const complaints = await Complaint.find(filter)
+      .sort({ createdDate: -1 })
+      .populate([
+        { path: 'createdBy', select: 'name email role' },
+        { path: 'student', select: 'name email role' },
+      ]);
+
+    return res.status(200).json(complaints.map(formatComplaint));
+  } catch (error) {
+    return res.status(500).json({
+      message: 'Failed to fetch admin complaints',
       error: error.message,
     });
   }
@@ -213,6 +314,7 @@ export async function updateComplaintStatus(req, res) {
     }
 
     complaint.status = normalizedStatus;
+    complaint.resolvedAt = normalizedStatus === 'resolved' ? new Date() : null;
     const updatedComplaint = await complaint.save();
     await updatedComplaint.populate([
       { path: 'createdBy', select: 'name email role' },
@@ -226,6 +328,10 @@ export async function updateComplaintStatus(req, res) {
       error: error.message,
     });
   }
+}
+
+export async function updateAdminComplaintStatus(req, res) {
+  return updateComplaintStatus(req, res);
 }
 
 export async function deleteComplaint(req, res) {

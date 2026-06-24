@@ -4,12 +4,15 @@ import mongoose from 'mongoose';
 import Complaint from '../models/Complaint.js';
 import { protect } from '../middleware/authMiddleware.js';
 import {
+  getAdminComplaints,
   createComplaint,
   deleteComplaint,
   getComplaintById,
   getComplaints,
   updateComplaint,
+  updateAdminComplaintStatus,
 } from '../controllers/complaintController.js';
+import { requireRole } from '../middleware/roleMiddleware.js';
 
 const originalMethods = {
   create: Complaint.create,
@@ -144,6 +147,40 @@ test('GET /complaints returns complaint list', async () => {
   assert.equal(res.body[0].title, 'Broken light');
 });
 
+test('GET /admin/complaints applies category, status, and date filters', async () => {
+  const req = {
+    user: { id: 'admin-1', role: 'admin' },
+    query: {
+      category: 'Facilities',
+      status: 'pending',
+      date: '2026-06-22',
+    },
+  };
+  const res = mockRes();
+  let capturedFilter;
+  const complaints = [mockComplaint()];
+
+  Complaint.find = (filter) => {
+    capturedFilter = filter;
+    return {
+      sort: () => ({
+        populate: async () => complaints,
+      }),
+    };
+  };
+
+  await getAdminComplaints(req, res);
+
+  assert.equal(res.statusCode, 200);
+  assert.equal(Array.isArray(res.body), true);
+  assert.equal(res.body.length, 1);
+  assert.ok(capturedFilter.category instanceof RegExp);
+  assert.equal(capturedFilter.status.$in.includes('pending'), true);
+  assert.equal(capturedFilter.status.$in.includes('open'), true);
+  assert.ok(capturedFilter.createdDate.$gte instanceof Date);
+  assert.ok(capturedFilter.createdDate.$lte instanceof Date);
+});
+
 test('PUT /complaints/:id allows creator to edit pending complaint', async () => {
   const creatorId = new mongoose.Types.ObjectId().toString();
   const complaint = mockComplaint({
@@ -172,6 +209,26 @@ test('PUT /complaints/:id allows creator to edit pending complaint', async () =>
 
   assert.equal(res.statusCode, 200);
   assert.equal(res.body.title, 'Fixed title');
+});
+
+test('PUT /admin/status/:id allows admin to update complaint status', async () => {
+  const complaint = mockComplaint();
+  const req = {
+    user: { id: 'admin-1', role: 'admin' },
+    params: { id: complaint._id.toString() },
+    body: { status: 'resolved' },
+  };
+  const res = mockRes();
+
+  Complaint.findById = () => ({
+    populate: async () => complaint,
+  });
+
+  await updateAdminComplaintStatus(req, res);
+
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.status, 'resolved');
+  assert.equal(res.body.resolvedAt instanceof Date || typeof res.body.resolvedAt === 'string', true);
 });
 
 test('PUT /complaints/:id rejects non-creators', async () => {
@@ -286,6 +343,20 @@ test('Authentication is required', async () => {
   });
 
   assert.equal(res.statusCode, 401);
+  assert.equal(nextCalled, false);
+});
+
+test('Admin role authorization rejects non-admin users', () => {
+  const middleware = requireRole('admin');
+  const req = { user: { role: 'student' } };
+  const res = mockRes();
+  let nextCalled = false;
+
+  middleware(req, res, () => {
+    nextCalled = true;
+  });
+
+  assert.equal(res.statusCode, 403);
   assert.equal(nextCalled, false);
 });
 
